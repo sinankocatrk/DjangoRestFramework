@@ -1,7 +1,47 @@
 from rest_framework import serializers
 from haberler.models import Makale
 
-class MakaleSerializer(serializers.Serializer):
+from datetime import datetime
+from datetime import date
+from django.utils.timesince import timesince
+
+
+
+class MakaleSerializer(serializers.ModelSerializer):
+
+    time_since_pub = serializers.SerializerMethodField()
+    # yazar = serializers.StringRelatedField()
+
+    class Meta:
+        model = Makale
+        fields = '__all__'
+        # fields = ['yazar', 'baslik', 'metin']
+        # exclude = ['yazar', 'baslik', 'metin']
+        read_only_fields = ['id', 'yaratilma_tarihi', 'güncelleneme_tarihi']
+
+    def get_time_since_pub(self,object):
+        now = datetime.now()
+        pub_date = object.yayımlanma_tarihi
+        if object.aktif == True:
+            time_delta = timesince(pub_date, now)
+            return time_delta
+        else:
+            return 'Aktif Degil!'
+
+    def validate_yayımlanma_tarihi(self, tarihdegeri):
+        today = date.today()
+        if tarihdegeri > today:
+            raise serializers.ValidationError('Yayımlanma tarihi ileri bir tarih olamaz!')
+        return tarihdegeri
+    
+    def validate(self, data): # object level
+        if data['baslik'] == data['aciklama']:
+            raise serializers.ValidationError('Baslik ve açıklama alanları aynı olamaz. Lütfen farklı bir açıklama giriniz.')
+        return data
+
+
+
+"""class MakaleSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     yazar = serializers.CharField()
     baslik = serializers.CharField()
@@ -36,4 +76,4 @@ class MakaleSerializer(serializers.Serializer):
     def validate_baslik(self, value):
         if len(value) < 20:
             raise serializers.ValidationError(f'Baslik alani minimum 20 karakter olmalı. siz {len(value)} karakter girdiniz.')
-        return value
+        return value"""
