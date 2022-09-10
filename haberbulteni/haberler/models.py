@@ -1,5 +1,5 @@
 from django.db import models
-""
+
 # Create your models here.
 class Makale(models.Model):
     yazar = models.CharField(max_length=20)
